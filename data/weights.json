@@ -1,0 +1,4 @@
+{
+  "comment": "Empirical AHP criterion weights, Section 4.4, full-panel AIJ aggregation (N=16 experts).",
+  "C1": 0.374, "C2": 0.154, "C3": 0.173, "C4": 0.104, "C5": 0.195
+}

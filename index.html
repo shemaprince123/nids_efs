@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NIDS-EFS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#10151C; --ink-soft:#2A323D; --paper:#F7F8FA; --panel:#FFFFFF;
+  --line:#DADFE5; --line-soft:#E9ECEF; --signal:#2E8B82; --signal-deep:#1F645D;
+  --amber:#B6752E; --amber-bg:#FBF1E4; --muted:#5B6672;
+  --font-ui:'IBM Plex Sans',system-ui,sans-serif; --font-data:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#EDEFF2; --ink-soft:#C7CDD6; --paper:#0D1117; --panel:#141A21;
+    --line:#2A333D; --line-soft:#1E252D; --muted:#8A93A0; --amber-bg:#2A2015;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#EDEFF2; --ink-soft:#C7CDD6; --paper:#0D1117; --panel:#141A21;
+  --line:#2A333D; --line-soft:#1E252D; --muted:#8A93A0; --amber-bg:#2A2015;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--font-ui);
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+body{line-height:1.5; -webkit-font-smoothing:antialiased;}
+.shell{max-width:1180px;margin:0 auto;padding:28px 20px 64px;}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  padding-bottom:18px;margin-bottom:22px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+header.top .brand{display:flex;align-items:baseline;gap:10px;}
+header.top h1{font-size:19px;font-weight:700;letter-spacing:0.01em;margin:0;}
+header.top .tag{font-size:13px;color:var(--muted);font-family:var(--font-data);}
+header.top .meta{font-size:12.5px;color:var(--muted);text-align:right;}
+.cmdstrip{font-family:var(--font-data);font-size:12.5px;background:var(--ink);color:#DCE6E4;
+  border-radius:3px;padding:10px 14px;margin-bottom:26px;overflow-x:auto;white-space:nowrap;border:1px solid var(--line);}
+.cmdstrip .prompt{color:var(--signal);}
+.layout{display:grid;grid-template-columns:280px 1fr;gap:28px;align-items:start;}
+@media (max-width:860px){.layout{grid-template-columns:1fr;}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:20px;}
+.panel h2{font-size:12.5px;font-weight:600;color:var(--muted);margin:0 0 16px;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:var(--ink-soft);}
+.field .hint{font-size:11.5px;color:var(--muted);margin-top:4px;}
+.field input[type=number], .field select{
+  width:100%;padding:9px 10px;font-family:var(--font-data);font-size:13.5px;
+  background:var(--paper);border:1px solid var(--line);border-radius:3px;color:var(--ink);}
+.field input[type=number]:focus, .field select:focus{outline:2px solid var(--signal);outline-offset:1px;}
+.scenario-row{display:flex;gap:6px;margin-bottom:4px;}
+.scenario-btn{flex:1;padding:8px 4px;font-size:12px;font-weight:500;
+  background:var(--paper);border:1px solid var(--line);border-radius:3px;color:var(--ink-soft);cursor:pointer;}
+.scenario-btn:hover{border-color:var(--signal);}
+.scenario-btn[aria-pressed="true"]{background:var(--signal);border-color:var(--signal);color:#fff;}
+.runbtn{width:100%;padding:11px;margin-top:6px;background:var(--ink);color:var(--paper);
+  border:none;border-radius:3px;font-weight:600;font-size:14px;cursor:pointer;}
+.runbtn:hover{background:var(--signal-deep);}
+.runbtn:focus-visible{outline:2px solid var(--signal);outline-offset:2px;}
+.results-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.results-head h2{font-size:15px;font-weight:600;margin:0;}
+.results-head .count{font-size:12.5px;color:var(--muted);font-family:var(--font-data);}
+.eliminated{background:var(--amber-bg);border:1px solid var(--line);border-radius:4px;padding:12px 16px;margin-bottom:18px;font-size:13px;}
+.eliminated .title{font-weight:600;color:var(--amber);margin-bottom:6px;}
+.eliminated ul{margin:0;padding-left:18px;color:var(--ink-soft);}
+.rankcard{background:var(--panel);border:1px solid var(--line);border-radius:4px;margin-bottom:14px;overflow:hidden;}
+.rankcard.rank1{border-color:var(--signal);border-width:1.5px;}
+.rankcard .head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line-soft);}
+.rankcard .rankno{font-family:var(--font-data);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:2px 7px;}
+.rankcard.rank1 .rankno{color:var(--signal-deep);border-color:var(--signal);}
+.rankcard .modelname{font-size:16px;font-weight:600;flex:1;}
+.rankcard .ahpscore{font-family:var(--font-data);font-size:13.5px;color:var(--muted);}
+.rankcard .ahpscore b{color:var(--ink);font-size:15px;}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:0;padding:14px 18px;}
+.metric{padding:6px 0;}
+.metric .mlabel{font-size:11px;color:var(--muted);margin-bottom:3px;}
+.metric .mval{font-family:var(--font-data);font-size:14.5px;font-weight:500;}
+.metric .mval.tco{color:var(--muted);}
+.metric .mval.na{color:var(--amber);font-style:italic;font-size:12px;}
+.flagnote{font-size:11px;color:var(--muted);padding:0 18px 12px;font-style:italic;}
+.disclosure{margin-top:30px;padding:16px 18px;border:1px solid var(--line);border-radius:4px;background:var(--panel);font-size:12.5px;color:var(--muted);line-height:1.6;}
+.disclosure b{color:var(--ink-soft);}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.loading{padding:40px;text-align:center;color:var(--muted);font-family:var(--font-data);font-size:13px;}
+.loaderr{padding:16px;border:1px solid var(--amber);background:var(--amber-bg);border-radius:4px;font-size:13px;}
+@media (max-width:480px){.shell{padding:18px 14px 48px;} header.top{flex-direction:column;align-items:flex-start;} header.top .meta{text-align:left;}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand"><h1>NIDS-EFS</h1><span class="tag">deployment recommendation tool</span></div>
+    <div class="meta">Scoring: empirical AHP weights (n=16 experts, Section 4.4)</div>
+  </header>
+
+  <div class="cmdstrip"><span class="prompt">$</span> <span id="cmdtext">loading&hellip;</span></div>
+
+  <div id="app" style="display:none">
+    <div class="layout">
+      <div class="panel" aria-label="Deployment constraints">
+        <h2>Deployment constraints</h2>
+        <div class="field">
+          <label for="scenario">Scenario preset</label>
+          <div class="scenario-row" role="group" aria-label="Scenario presets">
+            <button type="button" class="scenario-btn" data-scenario="A" aria-pressed="true">A &middot; Fintech</button>
+            <button type="button" class="scenario-btn" data-scenario="B" aria-pressed="false">B &middot; Bank</button>
+            <button type="button" class="scenario-btn" data-scenario="C" aria-pressed="false">C &middot; Enterprise</button>
+          </div>
+          <div class="hint">Loads typical values below; all fields stay editable.</div>
+        </div>
+        <div class="field"><label for="budget">Annual budget (USD)</label><input type="number" id="budget" value="10000" min="0" step="100"></div>
+        <div class="field"><label for="hardware">Hardware</label>
+          <select id="hardware"><option value="cpu-only" selected>CPU-only</option><option value="gpu">GPU available</option></select>
+        </div>
+        <div class="field"><label for="minacc">Minimum accuracy (F1)</label><input type="number" id="minacc" value="0.80" min="0" max="1" step="0.01"></div>
+        <div class="field"><label for="maxlat">Maximum latency (ms)</label><input type="number" id="maxlat" value="500" min="0" step="10"></div>
+        <div class="field"><label for="dataset">Deployment dataset profile</label>
+          <select id="dataset">
+            <option value="MEAN" selected>Mean across all datasets</option>
+            <option value="NSL-KDD">NSL-KDD</option>
+            <option value="UNSW-NB15">UNSW-NB15</option>
+            <option value="CICIDS2017">CICIDS2017</option>
+            <option value="CICIoT2023">CICIoT2023</option>
+          </select>
+        </div>
+        <button class="runbtn" id="runbtn">Get recommendation</button>
+      </div>
+      <div>
+        <div class="results-head"><h2>Recommended models</h2><span class="count" id="resultcount"></span></div>
+        <div id="eliminatedBox"></div>
+        <div id="results"></div>
+      </div>
+    </div>
+    <div class="disclosure" id="disclosureBox"></div>
+  </div>
+
+  <div id="loadingBox" class="loading">Loading benchmark data&hellip;</div>
+
+  <footer>
+    <span>NIDS-EFS &middot; MSc Information Security &middot; USIU-Africa</span>
+    <span id="buildtag"></span>
+  </footer>
+</div>
+
+<script>
+let RAW, AHP, WEIGHTS;
+const MODELS = ["XGBoost","DecisionTree","RandomForest","Ensemble_RF_XGB","SVM","CNN","NaiveBayes","LSTM"];
+const GPU_BENEFICIAL = new Set(["CNN","LSTM"]);
+const DEEP_LEARNING_MODELS = new Set(["CNN","LSTM"]);
+
+// ── TCO formula, ported from tco_calculator.py (see that file for full
+// documented assumptions: hardware cost, electricity rate, staffing tiers) ──
+const HARDWARE_COST_USD = 1200, HARDWARE_LIFESPAN_YEARS = 3;
+const SERVER_POWER_DRAW_WATTS = 65, ELECTRICITY_RATE_USD_PER_KWH = 0.17;
+const RETRAINS_PER_YEAR = 4;
+const GENERALIST_ANNUAL_SALARY_USD = 9000, SPECIALIST_ANNUAL_SALARY_USD = 22000;
+const MAINTENANCE_TIME_FRACTION = 0.10;
+const ANNUAL_FLOWS = 50000 * 365;
+
+function computeAnnualTco(model, trainingTimeSeconds, throughputPerSec){
+  if(throughputPerSec === null || throughputPerSec === undefined || throughputPerSec < 1) return null;
+  const hardwareAnnual = HARDWARE_COST_USD / HARDWARE_LIFESPAN_YEARS;
+  const trainingHoursPerRetrain = trainingTimeSeconds / 3600;
+  const trainingEnergyKwh = trainingHoursPerRetrain * (SERVER_POWER_DRAW_WATTS/1000) * RETRAINS_PER_YEAR;
+  const inferenceSecondsPerYear = ANNUAL_FLOWS / throughputPerSec;
+  const inferenceHoursPerYear = inferenceSecondsPerYear / 3600;
+  const inferenceEnergyKwh = inferenceHoursPerYear * (SERVER_POWER_DRAW_WATTS/1000);
+  const energyAnnual = (trainingEnergyKwh + inferenceEnergyKwh) * ELECTRICITY_RATE_USD_PER_KWH;
+  const salary = DEEP_LEARNING_MODELS.has(model) ? SPECIALIST_ANNUAL_SALARY_USD : GENERALIST_ANNUAL_SALARY_USD;
+  const staffingAnnual = salary * MAINTENANCE_TIME_FRACTION;
+  return Math.round((hardwareAnnual + energyAnnual + staffingAnnual) * 100) / 100;
+}
+
+const SCENARIOS = {
+  A:{budget:10000, hardware:"cpu-only", minacc:0.80, maxlat:500, dataset:"MEAN"},
+  B:{budget:35000, hardware:"cpu-only", minacc:0.85, maxlat:200, dataset:"MEAN"},
+  C:{budget:80000, hardware:"gpu",      minacc:0.90, maxlat:1000, dataset:"MEAN"},
+};
+
+async function loadData(){
+  try{
+    const [raw, ahp, weights] = await Promise.all([
+      fetch('data/benchmark.json').then(r=>{if(!r.ok)throw new Error('benchmark.json '+r.status); return r.json();}),
+      fetch('data/ahp_scores.json').then(r=>{if(!r.ok)throw new Error('ahp_scores.json '+r.status); return r.json();}),
+      fetch('data/weights.json').then(r=>{if(!r.ok)throw new Error('weights.json '+r.status); return r.json();}),
+    ]);
+    RAW = raw; AHP = ahp; WEIGHTS = weights;
+    document.getElementById('loadingBox').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('disclosureBox').innerHTML =
+      `<b>About this data.</b> All detection performance, latency, throughput, memory, and model size
+      figures are the study's real measured benchmark results (N=32 model-dataset runs, verified against
+      the author's own console output). AHP composite scores use the empirically derived weights from
+      Section 4.4 (C1=${WEIGHTS.C1}, C2=${WEIGHTS.C2}, C3=${WEIGHTS.C3}, C4=${WEIGHTS.C4}, C5=${WEIGHTS.C5};
+      16 cybersecurity practitioners). Annual TCO is computed live from each model's real training time and
+      throughput using a documented cost formula (hardware amortization, measured energy cost at Kenya's
+      commercial electricity rate, and a staffing-tier premium for deep learning models); see
+      tco_calculator.py for the full assumptions. The Random Forest + XGBoost ensemble's throughput and
+      memory were not captured by the benchmarking script for this run (training time and latency were);
+      those fields show "data not captured" rather than an invented number, and its TCO is not computed
+      for the same reason.`;
+    setScenario('A');
+  }catch(err){
+    document.getElementById('loadingBox').innerHTML =
+      `<div class="loaderr"><b>Could not load data files.</b><br>${err.message}<br><br>
+      If viewing this file directly from disk, serve it with a local server
+      (<code>python -m http.server</code>) or host it on GitHub Pages instead.</div>`;
+  }
+}
+
+function meanByModel(data, field){
+  const out = {};
+  MODELS.forEach(m=>{
+    const rows = data.filter(r=>r[0]===m);
+    const vals = rows.map(r=>r[field]).filter(v=>v!==null);
+    out[m] = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  });
+  return out;
+}
+function rowFor(model, dataset){
+  if(dataset==="MEAN"){
+    return {
+      acc: meanByModel(RAW,2)[model], f1: meanByModel(RAW,3)[model], train: meanByModel(RAW,4)[model],
+      lat: meanByModel(RAW,5)[model], thr: meanByModel(RAW,6)[model], mem: meanByModel(RAW,7)[model],
+      size: meanByModel(RAW,8)[model]
+    };
+  }
+  const r = RAW.find(x=>x[0]===model && x[1]===dataset);
+  return {acc:r[2], f1:r[3], train:r[4], lat:r[5], thr:r[6], mem:r[7], size:r[8]};
+}
+function ahpFor(model, dataset){
+  if(dataset==="MEAN") return AHP.mean[model];
+  return AHP.per_dataset[dataset][model];
+}
+function fmtNum(n, d=0){
+  if(n===null || n===undefined) return null;
+  if(n===0) return "0";
+  if(Math.abs(n) >= 100000) return n.toLocaleString(undefined,{maximumFractionDigits:0});
+  return n.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+function updateCmdString(c){
+  document.getElementById('cmdtext').textContent =
+    `python nids_efs_cli.py --budget ${c.budget} --hardware ${c.hardware} --min-accuracy ${c.minacc} --max-latency ${c.maxlat} --dataset ${c.dataset==='MEAN'?'ALL':c.dataset}`;
+}
+function setScenario(key){
+  const s = SCENARIOS[key];
+  document.getElementById('budget').value = s.budget;
+  document.getElementById('hardware').value = s.hardware;
+  document.getElementById('minacc').value = s.minacc;
+  document.getElementById('maxlat').value = s.maxlat;
+  document.getElementById('dataset').value = s.dataset;
+  document.querySelectorAll('.scenario-btn').forEach(b=>b.setAttribute('aria-pressed', b.dataset.scenario===key ? "true":"false"));
+  run();
+}
+function run(){
+  const budget = parseFloat(document.getElementById('budget').value) || 0;
+  const hardware = document.getElementById('hardware').value;
+  const minacc = parseFloat(document.getElementById('minacc').value) || 0;
+  const maxlat = parseFloat(document.getElementById('maxlat').value) || Infinity;
+  const dataset = document.getElementById('dataset').value;
+  updateCmdString({budget,hardware,minacc:minacc.toFixed(2),maxlat,dataset});
+
+  const eliminated = [], survivors = [];
+  MODELS.forEach(model=>{
+    const row = rowFor(model, dataset);
+    const tco = computeAnnualTco(model, row.train, row.thr);
+    const reasons = [];
+    const f1frac = row.f1/100;
+    if(f1frac < minacc) reasons.push(`F1 ${row.f1.toFixed(1)}% below ${(minacc*100).toFixed(0)}% threshold`);
+    if(row.lat !== null && row.lat > maxlat) reasons.push(`latency ${fmtNum(row.lat,0)}ms exceeds ${maxlat}ms limit`);
+    if(tco !== null && tco > budget) reasons.push(`estimated TCO $${fmtNum(tco)} exceeds budget`);
+    let flagged = hardware==="cpu-only" && GPU_BENEFICIAL.has(model);
+
+    if(reasons.length){
+      eliminated.push({model, reason: reasons[0]});
+    } else {
+      const ahp = ahpFor(model, dataset);
+      survivors.push({model, row, ahp, tco, flagged});
+    }
+  });
+  survivors.sort((a,b)=>b.ahp-a.ahp);
+  const top3 = survivors.slice(0,3);
+
+  const elimBox = document.getElementById('eliminatedBox');
+  elimBox.innerHTML = eliminated.length ? `<div class="eliminated"><div class="title">Eliminated by hard constraints</div>
+    <ul>${eliminated.map(e=>`<li><strong>${e.model.replace('_RF_XGB',' + XGBoost').replace(/_/g,' ')}</strong>: ${e.reason}</li>`).join('')}</ul></div>` : "";
+
+  const resEl = document.getElementById('results');
+  document.getElementById('resultcount').textContent = `${top3.length} of ${MODELS.length} models shown`;
+  if(top3.length===0){
+    resEl.innerHTML = `<div class="eliminated"><div class="title">No models satisfy these constraints</div>
+      <div>Loosen the accuracy, latency, or budget threshold and try again.</div></div>`;
+    return;
+  }
+  resEl.innerHTML = top3.map((item,i)=>{
+    const dn = item.model.replace("_RF_XGB"," + XGBoost (Ensemble)").replace(/_/g," ");
+    const memDisplay = item.row.mem!==null ? `${fmtNum(item.row.mem,1)}MB` : null;
+    const thrDisplay = item.row.thr!==null ? `${fmtNum(item.row.thr)}/s` : null;
+    const tcoDisplay = item.tco!==null ? `$${fmtNum(item.tco,2)}` : null;
+    return `<div class="rankcard ${i===0?'rank1':''}">
+      <div class="head"><span class="rankno">RANK ${i+1}</span><span class="modelname">${dn}</span>
+        <span class="ahpscore">AHP score <b>${item.ahp.toFixed(4)}</b></span></div>
+      <div class="metrics-grid">
+        <div class="metric"><div class="mlabel">Accuracy</div><div class="mval">${item.row.acc.toFixed(2)}%</div></div>
+        <div class="metric"><div class="mlabel">F1-score</div><div class="mval">${item.row.f1.toFixed(2)}%</div></div>
+        <div class="metric"><div class="mlabel">Latency</div><div class="mval">${fmtNum(item.row.lat,1)}ms</div></div>
+        <div class="metric"><div class="mlabel">Memory</div>${memDisplay?`<div class="mval">${memDisplay}</div>`:'<div class="mval na">data not captured</div>'}</div>
+        <div class="metric"><div class="mlabel">Throughput</div>${thrDisplay?`<div class="mval">${thrDisplay}</div>`:'<div class="mval na">data not captured</div>'}</div>
+        <div class="metric"><div class="mlabel">Est. annual TCO</div>${tcoDisplay?`<div class="mval tco">${tcoDisplay}</div>`:'<div class="mval na">pending (needs throughput)</div>'}</div>
+      </div>
+      ${item.model==="Ensemble_RF_XGB" ? '<div class="flagnote">Throughput and memory were not captured for this model in the latest benchmarking run; training time and latency are real measurements.</div>' : ''}
+      ${item.flagged ? '<div class="flagnote">Flagged: GPU-beneficial architecture selected under a CPU-only constraint.</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+document.querySelectorAll('.scenario-btn').forEach(b=>b.addEventListener('click', ()=>setScenario(b.dataset.scenario)));
+document.getElementById('runbtn').addEventListener('click', run);
+['budget','hardware','minacc','maxlat','dataset'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', ()=>{
+    document.querySelectorAll('.scenario-btn').forEach(b=>b.setAttribute('aria-pressed','false'));
+  });
+});
+document.getElementById('buildtag').textContent = "for SUS evaluation \u00B7 final data";
+loadData();
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "comment": "Real AHP composite scores, empirical weights (Section 4.4), read directly from the author's own ahp_scorer.py console output. Per-dataset values plus the overall mean.",
+  "mean": {
+    "XGBoost": 0.9407, "DecisionTree": 0.8067, "CNN": 0.7334,
+    "Ensemble_RF_XGB": 0.7000, "RandomForest": 0.6982, "SVM": 0.6211,
+    "NaiveBayes": 0.4765, "LSTM": 0.4320
+  },
+  "per_dataset": {
+    "NSL-KDD": {
+      "XGBoost": 0.9456, "DecisionTree": 0.8943, "CNN": 0.7738,
+      "Ensemble_RF_XGB": 0.6922, "SVM": 0.6541, "RandomForest": 0.6525,
+      "NaiveBayes": 0.4669, "LSTM": 0.4227
+    },
+    "UNSW-NB15": {
+      "XGBoost": 0.9447, "RandomForest": 0.7034, "Ensemble_RF_XGB": 0.6904,
+      "NaiveBayes": 0.6719, "CNN": 0.6714, "DecisionTree": 0.5526,
+      "LSTM": 0.4322, "SVM": 0.4174
+    },
+    "CICIDS2017": {
+      "XGBoost": 0.9647, "DecisionTree": 0.9116, "CNN": 0.7630,
+      "RandomForest": 0.7407, "Ensemble_RF_XGB": 0.7258, "SVM": 0.6898,
+      "LSTM": 0.4282, "NaiveBayes": 0.3621
+    },
+    "CICIoT2023": {
+      "XGBoost": 0.9077, "DecisionTree": 0.8683, "CNN": 0.7254,
+      "SVM": 0.7233, "RandomForest": 0.6964, "Ensemble_RF_XGB": 0.6917,
+      "LSTM": 0.4450, "NaiveBayes": 0.4050
+    }
+  }
+}
